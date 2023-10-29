@@ -1,4 +1,4 @@
-# Line Detection Algorithm!
+# Line Detection Algorithm
 
 Lines detection algorithm for ROS2 framework.
 
