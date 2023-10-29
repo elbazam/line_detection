@@ -49,3 +49,9 @@ The algorithm is mostly based on the following paper: "A line segment extraction
 graph TD
 A{laser scan} -- \scan --> B[line_detection] -- "/allTheLines" --> C{rviz2/MarkerArray}
 ```
+
+## Future work
+
+- Adding config files.
+- Adding corner and exit detection.
+
