@@ -28,7 +28,7 @@ The algorithm is mostly based on the following paper: "A line segment extraction
 - Download repository:
 	```sh
 	cd ~/$YOUR_ROS2_WORKSPACE$/src
-	git clone ...
+	git clone https://github.com/elbazam/line_detection.git
 	```
 - Install repository:
 
