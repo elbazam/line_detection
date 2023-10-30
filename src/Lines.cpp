@@ -210,9 +210,9 @@ void Lines::fixLines()
         intersectCurrentNext = lineIntersection(finishedLines[current].params , finishedLines[next].params);
 
         bool isPrevCurrentIntesceted = distanceBetweenTwoPoints(Measurements[finishedLines[prev].end] ,
-                                                                Measurements[finishedLines[current].start]) < 0.2;
+                                                                Measurements[finishedLines[current].start]) < 0.3;
         bool isCurrentNextIntesceted = distanceBetweenTwoPoints(Measurements[finishedLines[next].start] ,
-                                                                Measurements[finishedLines[current].end]) < 0.2;
+                                                                Measurements[finishedLines[current].end]) < 0.3;
         
 
         if (intersectPrevCurrent.intersect && isPrevCurrentIntesceted) 

@@ -22,7 +22,8 @@ public:
     auto subscriber = create_subscription<sensor_msgs::msg::LaserScan>(
       "/scan", 10, callback);
 
-    auto publisher = create_publisher<visualization_msgs::msg::MarkerArray>("/allTheLines",10);
+    auto linePublisher = create_publisher<visualization_msgs::msg::MarkerArray>("/lines",10);
+    auto cornerPublisher = create_publisher<visualization_msgs::msg::MarkerArray>("/Corners",10);
 
     // Publish lines in 5Hz
     timer_ = this->create_wall_timer(200ms, std::bind(&LinePublisher::timer_callback, this));
@@ -30,7 +31,8 @@ public:
     RCLCPP_INFO(this->get_logger(), "Scan subscriber initialized");
 
     subscriber_ = subscriber;
-    publisher_ = publisher;
+    linePublisher_ = linePublisher;
+    cornerPublisher_ = cornerPublisher;
   }
 
 private:
@@ -56,7 +58,7 @@ private:
     void visualize(const std::vector<straightLine> finishedLines)
     {
 
-        visualization_msgs::msg::MarkerArray multiLines;
+        visualization_msgs::msg::MarkerArray multiLines , multiCorners;
         builtin_interfaces::msg::Duration lifeTimeDuration;
         lifeTimeDuration.nanosec = 200e6;
         // Arbitrary height.
@@ -109,10 +111,11 @@ private:
                 singlePoint.pose.position.x = finishedLines[i].realEndPoint.x;
                 singlePoint.pose.position.y = finishedLines[i].realEndPoint.y;
                 singlePoint.pose.position.z = 0.2;
-                multiLines.markers.push_back(singlePoint);
+                multiCorners.markers.push_back(singlePoint);
             }
         }
-        this->publisher_->publish(multiLines);
+        this->linePublisher_->publish(multiLines);
+        this->cornerPublisher_->publish(multiCorners);
     }
 
     void countLines(const sensor_msgs::msg::LaserScan::SharedPtr msg)
@@ -123,19 +126,11 @@ private:
         
         rangesToCartesianCoordinates(Measurements_ , Np_);
 
-        
-
         lines.uploadData(Measurements_);
-        // lines.seedSegmentDetection();
-        // lines.regionGrowing();
-        // lines.cleanSameLines();
-        // lines.overlapRegionProcessing();
-        // lines.joinLines();
         lines.find();
         
         std::vector<straightLine> finishedLines = lines.getFinishedLines();
-        
-        
+                
         visualize(finishedLines);
 
     }
@@ -153,7 +148,8 @@ private:
     }
     
     rclcpp::Subscription<sensor_msgs::msg::LaserScan>::SharedPtr subscriber_;
-    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr publisher_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr linePublisher_;
+    rclcpp::Publisher<visualization_msgs::msg::MarkerArray>::SharedPtr cornerPublisher_;
     rclcpp::TimerBase::SharedPtr timer_;
     sensor_msgs::msg::LaserScan::SharedPtr laser_msg;
 
