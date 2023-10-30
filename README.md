@@ -50,7 +50,7 @@ The algorithm is mostly based on the following paper: "A line segment extraction
 ```mermaid
 graph TD
 A{laser scan} -- \scan --> B[line_detection] -- "/lines" --> C{rviz2/MarkerArray}
-A{laser scan} -- \scan --> B[line_detection] -- "/corners" --> C{rviz2/MarkerArray}
+B[line_detection] -- "/corners" --> C{rviz2/MarkerArray}
 ```
 
 ## Future work
