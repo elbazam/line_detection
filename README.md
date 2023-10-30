@@ -19,8 +19,10 @@ The algorithm is mostly based on the following paper: "A line segment extraction
  - "/scan" ([sensor_msgs/msg/LaserScan.msg](https://docs.ros2.org/latest/api/sensor_msgs/msg/LaserScan.html)
     > Laser scan message from laser sensor.
 ###  Published Topics
- - "/allTheLines" ([visualization_msgs/msg/MarkerArray](https://docs.ros2.org/latest/api/visualization_msgs/msg/MarkerArray.html))
+ - "/lines" ([visualization_msgs/msg/MarkerArray](https://docs.ros2.org/latest/api/visualization_msgs/msg/MarkerArray.html))
     > Marker array consisting of "LINE_STRIP" markers ([visualization_msgs/msg/Marker](https://docs.ros2.org/latest/api/visualization_msgs/msg/Marker.html)). Each "LINE_STRIP" consists two points, starting point of the detected line and the ending point.
+ - "/corners" ([visualization_msgs/msg/MarkerArray](https://docs.ros2.org/latest/api/visualization_msgs/msg/MarkerArray.html))
+	> Marker array consisting of "Sphere" markers. Each sphere location represent the corner location.
 
 
 ## Setup
