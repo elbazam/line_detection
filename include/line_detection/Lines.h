@@ -47,7 +47,7 @@ class Lines {
         void cleanSameLines();
         void overlapRegionProcessing();
         void joinLines(double threshold = 0.5);
-
+        void fixLines();
         void find();
 
         std::vector<straightLine> getSeeds();

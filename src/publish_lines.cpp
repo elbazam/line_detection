@@ -18,7 +18,6 @@ class LinePublisher : public rclcpp::Node
 public:
   LinePublisher(): Node("scan_subscriber")
   {
-    
     auto callback = std::bind(&LinePublisher::laserScanCallback, this, std::placeholders::_1);
     auto subscriber = create_subscription<sensor_msgs::msg::LaserScan>(
       "/scan", 10, callback);
@@ -36,7 +35,7 @@ public:
 
 private:
 
-    void rangesToCartesianCoordinates(std::vector<point2D>& Measurements , const int Np)
+    void rangesToCartesianCoordinates(std::vector<point2D>& Measurements_ , const int Np)
     {
         for (int i = 0; i < Np; i++)
         {
@@ -49,49 +48,72 @@ private:
             point.x = range * cos(angle);
             point.y = range * sin(angle);
             
-            Measurements.push_back(point);
+            Measurements_.push_back(point);
         }
         
     }
 
-    void visualizeLinesInRviz(const std::vector<straightLine> finishedLines , const std::vector<point2D> Measurements)
+    void visualize(const std::vector<straightLine> finishedLines)
     {
+
         visualization_msgs::msg::MarkerArray multiLines;
-        geometry_msgs::msg::Point startingPoint , EndingPoint;
-        point2D start , end;
+        builtin_interfaces::msg::Duration lifeTimeDuration;
+        lifeTimeDuration.nanosec = 200e6;
         // Arbitrary height.
+        geometry_msgs::msg::Point startingPoint , EndingPoint;
+        int numberOfFinishedLines = finishedLines.size();
         startingPoint.z = 0.1;
         EndingPoint.z = 0.1;
-        int numberOfFinishedLines = finishedLines.size();
         for (int i = 0 ; i < numberOfFinishedLines ; i++)
         {
-
-            visualization_msgs::msg::Marker singleLine;
+            visualization_msgs::msg::Marker singleLine , singlePoint;
             singleLine.type = visualization_msgs::msg::Marker::LINE_STRIP;
             singleLine.header.frame_id = "base_scan";
+            singleLine.lifetime = lifeTimeDuration;
             singleLine.ns = std::to_string(i);
             singleLine.scale.x = 0.1;
-            // Starting point.
-            start = createPredictedPosition(Measurements[finishedLines[i].start] , finishedLines[i].params);
-            end = createPredictedPosition(Measurements[finishedLines[i].end] , finishedLines[i].params);
             
-            startingPoint.x = start.x;
-            startingPoint.y = start.y;
-            EndingPoint.x = end.x;
-            EndingPoint.y = end.y;
-            singleLine.points.push_back(startingPoint);
-            singleLine.points.push_back(EndingPoint);
-
             // White lines.
             singleLine.color.a = 1;
             singleLine.color.r = 1;
             singleLine.color.g = 1;
             singleLine.color.b = 1;
 
+            startingPoint.x = finishedLines[i].realStartPoint.x;
+            startingPoint.y = finishedLines[i].realStartPoint.y;
+            EndingPoint.x = finishedLines[i].realEndPoint.x;
+            EndingPoint.y = finishedLines[i].realEndPoint.y;
+            singleLine.points.push_back(startingPoint);
+            singleLine.points.push_back(EndingPoint);
+
+            
+
             multiLines.markers.push_back(singleLine);
+            
+            // ---------------------- Points Area -----------------------
+            
+            if (finishedLines[i].realEndPoint.intersect)
+            {
+                singlePoint.type = visualization_msgs::msg::Marker::SPHERE;
+                singlePoint.header.frame_id = "base_scan";
+                singlePoint.ns = std::to_string(i + 100);
+                singlePoint.lifetime = lifeTimeDuration;
+                singlePoint.scale.x = 0.1;
+                singlePoint.scale.y = 0.1;
+                singlePoint.scale.z = 0.1;
+                // Red spheres.
+                singlePoint.color.a = 1;
+                singlePoint.color.r = 0;
+                singlePoint.color.g = 1;
+                singlePoint.color.b = 0;
+                singlePoint.pose.position.x = finishedLines[i].realEndPoint.x;
+                singlePoint.pose.position.y = finishedLines[i].realEndPoint.y;
+                singlePoint.pose.position.z = 0.2;
+                multiLines.markers.push_back(singlePoint);
+            }
         }
         this->publisher_->publish(multiLines);
-    } 
+    }
 
     void countLines(const sensor_msgs::msg::LaserScan::SharedPtr msg)
     {
@@ -101,19 +123,20 @@ private:
         
         rangesToCartesianCoordinates(Measurements_ , Np_);
 
+        
+
         lines.uploadData(Measurements_);
-        lines.seedSegmentDetection();
-        lines.regionGrowing();
-        lines.cleanSameLines();
-        lines.overlapRegionProcessing();
-        lines.joinLines();
-        // std::vector<straightLine> finishedLines = lines.getSeeds();
-        // std::vector<straightLine> finishedLines = lines.getRegions();
+        // lines.seedSegmentDetection();
+        // lines.regionGrowing();
+        // lines.cleanSameLines();
+        // lines.overlapRegionProcessing();
+        // lines.joinLines();
+        lines.find();
         
         std::vector<straightLine> finishedLines = lines.getFinishedLines();
-        // int numberOfFinishedLines = finishedLines.size();
-        // RCLCPP_INFO(this->get_logger(), "%s", std::to_string(numberOfFinishedLines).c_str());
-        visualizeLinesInRviz(finishedLines , Measurements_);
+        
+        
+        visualize(finishedLines);
 
     }
 

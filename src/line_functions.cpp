@@ -4,6 +4,7 @@ point2D::point2D(){}
 lineParams::lineParams(){}
 straightLine::straightLine(){}
 unitedLineIndexes::unitedLineIndexes(){}
+wholeLine::wholeLine(){}
 
 double distanceBetweenTwoPoints(const point2D point1 , const point2D point2)
 {
@@ -14,6 +15,9 @@ double distanceBetweenTwoPoints(const point2D point1 , const point2D point2)
 
 lineParams fitLineToMeasurements(const std::vector<point2D> points)
 {
+    /*
+    Fit a linear line to a batch of points.
+    */
     lineParams params;
     int SeedSize = points.size();
     float sumX = 0.0; /* sum of x      */
@@ -21,8 +25,9 @@ lineParams fitLineToMeasurements(const std::vector<point2D> points)
     float sumXY = 0.0; /* sum of x * y */
     float sumY = 0.0;  /* sum of y     */
     float sumY2 = 0.0;  /* sum of y     */
-    // float rSqr = 0.0;
-    for (int i = 0 ; i < SeedSize ; i++){
+    
+    for (int i = 0 ; i < SeedSize ; i++)
+    {
         sumX += points[i].x;
         sumX2 += points[i].x * points[i].x;
         sumXY += points[i].x * points[i].y;
@@ -30,10 +35,6 @@ lineParams fitLineToMeasurements(const std::vector<point2D> points)
         sumY2 += points[i].y * points[i].y;
     }
 
-
-
-    // rSqr = (SeedSize * sumXY - sumX * sumY) / ((SeedSize*sumX2 - sumX*sumX)*(SeedSize*sumY2 - sumY*sumY));
-    // params.r = rSqr * (SeedSize * sumXY - sumX * sumY);
     float xMean = sumX / SeedSize;
     float yMean = sumY / SeedSize;
     float denominator = sumX2 - sumX * xMean;
@@ -166,9 +167,6 @@ void updateRegions(straightLine& Lcurrent , straightLine& LNext , int k)
 
 bool checkIfSame(const lineParams candidate , const lineParams previous)
 {
-
-    // float parallelLinesError = candidate.a * previous.b - candidate.b * previous.a;
-    // if (parallelLinesError > 0.01){return false;}
     float error = 0;
     error += pow(abs(candidate.a - previous.a),2);
     error += pow(abs(candidate.b - previous.b),2);
@@ -176,5 +174,32 @@ bool checkIfSame(const lineParams candidate , const lineParams previous)
     error = pow(error,0.5);
 
     return error < 0.02;
+    
+}
+
+
+point2D lineIntersection(const lineParams params1 , const lineParams params2 , float threshold)
+{
+
+    point2D intersectionPoint;
+
+    float xPart = params1.b * params2.c - params1.c * params2.b;
+    float yPart = params1.c * params2.a - params1.a * params2.c;
+    float denominator = params1.a * params2.b - params1.b * params2.a;
+
+    if (abs(denominator) < threshold)
+    {
+        intersectionPoint.x = 0;
+        intersectionPoint.y = 0;
+        intersectionPoint.intersect = false;
+    }
+    else
+    {
+        intersectionPoint.x = xPart / denominator;
+        intersectionPoint.y = yPart / denominator;
+        intersectionPoint.intersect = true;
+    }
+    return intersectionPoint;
+    
     
 }

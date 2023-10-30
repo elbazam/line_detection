@@ -13,6 +13,7 @@ class point2D
     public:
         float x;
         float y;
+        bool intersect;
     point2D();
 };
 
@@ -22,7 +23,7 @@ class lineParams
         float a;
         float b;
         float c;
-        float r;
+        
     lineParams();
 };
 
@@ -33,6 +34,9 @@ class straightLine
         int end;
         lineParams params;
         std::vector<point2D> points;
+        point2D realStartPoint;
+        point2D realEndPoint;
+
     straightLine();
 };
 
@@ -42,6 +46,14 @@ class unitedLineIndexes
         int start;
         int end;
     unitedLineIndexes();
+};
+
+class wholeLine
+{
+    public:
+        point2D firstPoint;
+        point2D lastPoint;
+    wholeLine();
 };
 
 double distanceBetweenTwoPoints(const point2D point1 , const point2D point2);
@@ -65,5 +77,6 @@ void updateRegions(straightLine& Lcurrent , straightLine& LNext , int k);
 
 bool checkIfSame(const lineParams candidate , const lineParams previous);
 
+point2D lineIntersection(const lineParams params1 , const lineParams params2 , float threshold = 0.02);
 
 #endif

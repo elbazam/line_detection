@@ -153,6 +153,9 @@ void Lines::overlapRegionProcessing()
 
 void Lines::cleanSameLines()
 {   
+    /* 
+    Clean every region candidate that is a subset of another region candidate.
+    */
     int RegionSize = Regions.size();
     for (int i = 0; i < RegionSize ; i ++)
     {
@@ -165,18 +168,16 @@ void Lines::cleanSameLines()
                 Regions.erase(Regions.begin() + k);
             }
         }
-
     }
 }
 
 void Lines::joinLines(double threshold)
 {
-
     int numberOfSegments = finishedLines.size();
-    for (int current = 0; current < numberOfSegments-1 ; current++)
+    for (int current = 0; current < numberOfSegments ; current++)
     {
-
         int next = current+1;
+        if (next == numberOfSegments){next = 0;}
         int endCurrent = finishedLines[current].end;
         int startNext = finishedLines[next].start;
         double dist = distanceBetweenTwoPoints(Measurements[endCurrent],Measurements[startNext]);
@@ -192,8 +193,58 @@ void Lines::joinLines(double threshold)
 
         finishedLines.erase(finishedLines.begin() + current);
     }
+}
+
+void Lines::fixLines()
+{
+    int numberOfSegments = finishedLines.size();
+    for (int current = 1; current < numberOfSegments ; current++)
+    {
+        int prev = current - 1;
+        int next = current + 1;
+        if (next == numberOfSegments){next = 0;}
+        
+        point2D intersectPrevCurrent , intersectCurrentNext;
+
+        intersectPrevCurrent = lineIntersection(finishedLines[current].params , finishedLines[prev].params);
+        intersectCurrentNext = lineIntersection(finishedLines[current].params , finishedLines[next].params);
+
+        bool isPrevCurrentIntesceted = distanceBetweenTwoPoints(Measurements[finishedLines[prev].end] ,
+                                                                Measurements[finishedLines[current].start]) < 0.2;
+        bool isCurrentNextIntesceted = distanceBetweenTwoPoints(Measurements[finishedLines[next].start] ,
+                                                                Measurements[finishedLines[current].end]) < 0.2;
+        
+
+        if (intersectPrevCurrent.intersect && isPrevCurrentIntesceted) 
+        {
+            finishedLines[prev].realEndPoint = intersectPrevCurrent;
+            finishedLines[current].realStartPoint = intersectPrevCurrent;
+        }
+        else
+        {
+            finishedLines[current].realStartPoint = createPredictedPosition(Measurements[finishedLines[current].start] ,
+                                                                            finishedLines[current].params);
+            finishedLines[prev].realEndPoint = createPredictedPosition(Measurements[finishedLines[prev].end] ,
+                                                                       finishedLines[prev].params);
+            finishedLines[prev].realEndPoint.intersect = false;
+        }
+        if (intersectCurrentNext.intersect && isCurrentNextIntesceted)
+        {
+            finishedLines[current].realEndPoint = intersectCurrentNext;
+            finishedLines[next].realStartPoint = intersectCurrentNext;
+        }
+        else
+        {
+            finishedLines[current].realEndPoint = createPredictedPosition(Measurements[finishedLines[current].end] ,
+                                                                            finishedLines[current].params);
+            finishedLines[next].realStartPoint = createPredictedPosition(Measurements[finishedLines[next].start] ,
+                                                                       finishedLines[next].params);
+            finishedLines[current].realEndPoint.intersect = false;
+        }
+    }
 
 }
+
 
 void Lines::find()
 {
@@ -202,6 +253,7 @@ void Lines::find()
     cleanSameLines();
     overlapRegionProcessing();
     joinLines();
+    fixLines();
 }
 
 
