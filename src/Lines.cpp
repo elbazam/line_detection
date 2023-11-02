@@ -38,6 +38,8 @@ void Lines::seedSegmentDetection()
             if (lineDistance > epsilon || predictedDistance > delta){flag = false;}    
         }
         if (flag){
+            seedCandidate.realStartPoint = Measurements[start];
+            seedCandidate.realEndPoint = Measurements[end];
             Seeds.push_back(seedCandidate);
         }
     }
@@ -151,11 +153,12 @@ void Lines::overlapRegionProcessing()
 
 }
 
+/* 
+Clean every region candidate that is a subset of another region candidate.
+*/
 void Lines::cleanSameLines()
 {   
-    /* 
-    Clean every region candidate that is a subset of another region candidate.
-    */
+    
     int RegionSize = Regions.size();
     for (int i = 0; i < RegionSize ; i ++)
     {

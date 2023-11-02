@@ -6,6 +6,8 @@ straightLine::straightLine(){}
 unitedLineIndexes::unitedLineIndexes(){}
 wholeLine::wholeLine(){}
 
+
+
 double distanceBetweenTwoPoints(const point2D point1 , const point2D point2)
 {
     double dxSqr = pow(point1.x - point2.x,2);
@@ -13,11 +15,12 @@ double distanceBetweenTwoPoints(const point2D point1 , const point2D point2)
     return pow(dxSqr + dySqr , 0.5);
 }
 
+/*
+Fit a linear line (a,b,c) parameters to a batch of points:
+a*x + b*y + c = 0
+*/
 lineParams fitLineToMeasurements(const std::vector<point2D> points)
 {
-    /*
-    Fit a linear line to a batch of points.
-    */
     lineParams params;
     int SeedSize = points.size();
     float sumX = 0.0; /* sum of x      */
@@ -37,25 +40,29 @@ lineParams fitLineToMeasurements(const std::vector<point2D> points)
 
     float xMean = sumX / SeedSize;
     float yMean = sumY / SeedSize;
-    float denominator = sumX2 - sumX * xMean;
     
-    params.b = -1.0;
-    params.a = (sumXY - sumX * yMean) / denominator;
-    params.c = yMean - params.a * xMean;
 
-    float radToDeg = 180 / M_PI;
-    bool reverseRoles = abs(abs(atan2(params.a,params.b)) - M_PI_2)*radToDeg < 45.0;
-
-    if (reverseRoles)
+    bool original = sumX2/SeedSize - pow(xMean,2) > sumY2/SeedSize - pow(yMean,2);
+    
+    // More likely that y is the dependent variable.
+    if (original)
     {
-        float denominator2 = sumY2 - sumY * yMean;
+        float denominator = sumX2 - sumX * xMean;
+        params.b = -1.0;
+        params.a = (sumXY - sumX * yMean) / denominator;
+        params.c = yMean - params.a * xMean;
+    }
+    // More likely that x is the dependent variable.
+    else
+    {
+        float denominator = sumY2 - sumY * yMean;
         params.a = -1.0;
-        params.b = (sumXY - sumY * xMean) / denominator2;
-        params.c = xMean - params.b * yMean;
+        params.b = (sumXY - sumY * xMean) / denominator;
+        params.c = xMean - params.b * yMean; 
     }
     
-
-    // Normalize line parameters. 
+   
+    // Normalize line parameters (a,b,c) / |(a,b,c)|. 
     double normal = pow((params.b * params.b + params.a * params.a + params.c * params.c),0.5);
     params.a /= normal;
     params.b /= normal;
@@ -63,6 +70,7 @@ lineParams fitLineToMeasurements(const std::vector<point2D> points)
 
     return params;
 }
+
 
 double distanceFromLine(const point2D point , const lineParams params)
 {
@@ -85,9 +93,9 @@ double maximunDistanceToLine(const std::vector<point2D> points ,const lineParams
     return maxDist;
 }
 
+/*Create predicted position on a linear line.*/
 point2D createPredictedPosition( const point2D measurement ,const lineParams params)
 {
-    /*Create predicted position on a line.*/
     point2D PredictedPosition;
     double theta = atan2(measurement.y , measurement.x);
     double numerator   = -params.c;
@@ -101,7 +109,7 @@ point2D createPredictedPosition( const point2D measurement ,const lineParams par
     }
     else 
     {
-        if (params.b == 0) //  Vertical line.
+        if (abs(params.b) < 0.001) //  Vertical line.
         {
 
             PredictedPosition.x = -params.c / params.a;
@@ -129,17 +137,16 @@ double distanceMeasuredToPredictedPosition(const point2D measurement ,const line
     return distanceBetweenTwoPoints(measurement , PredictedPosition);
 }
 
-void insertPointsToLineCandidate(const int start , const int end , const std::vector<point2D> points , straightLine& seed){
-    
-    seed.end = end;
+// Create seeds.
+void insertPointsToLineCandidate(const int start , const int end , const std::vector<point2D> points , straightLine& seed)
+{   
     seed.start = start;
-    // Include the end index:
-    for (int i = start ; i <= end; i++)
-    {
-        seed.points.push_back(points[i]);
-    }
+    seed.end = end; 
+    for (int i = seed.start ; i <= seed.end; i++){seed.points.push_back(points[i]);}
+
 }
 
+// Calculate the line length.
 double lineLength(const straightLine line)
 {
     int last = line.points.size() - 1;
@@ -167,13 +174,11 @@ void updateRegions(straightLine& Lcurrent , straightLine& LNext , int k)
 
 bool checkIfSame(const lineParams candidate , const lineParams previous)
 {
-    float error = 0;
-    error += pow(abs(candidate.a - previous.a),2);
-    error += pow(abs(candidate.b - previous.b),2);
-    error += pow(abs(candidate.c - previous.c),2);
-    error = pow(error,0.5);
+    if (abs(candidate.c) - abs(previous.c) > 0.01) {return false;}
 
-    return error < 0.02;
+    float dTheta = abs(acos((candidate.a * previous.a  + candidate.b * previous.b) / pow((pow(candidate.a,2) + pow(candidate.b,2)) * (pow(previous.a,2) + pow(previous.b,2)),0.5)));
+    dTheta *= 180 / M_PI;
+    return dTheta < 2 || 180 - dTheta < 2;
     
 }
 

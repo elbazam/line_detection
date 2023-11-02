@@ -46,7 +46,7 @@ class Lines {
         void regionGrowing();
         void cleanSameLines();
         void overlapRegionProcessing();
-        void joinLines(double threshold = 0.5);
+        void joinLines(double threshold = 0.2);
         void fixLines();
         void find();
 

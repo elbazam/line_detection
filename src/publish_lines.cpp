@@ -129,6 +129,7 @@ private:
         lines.uploadData(Measurements_);
         lines.find();
         
+        // std::vector<straightLine> finishedLines = lines.getSeeds();
         std::vector<straightLine> finishedLines = lines.getFinishedLines();
                 
         visualize(finishedLines);
@@ -155,8 +156,8 @@ private:
 
     // Algorithm constants:
     bool flag = false;
-    float epsilon_ = 0.06 , delta_ = 0.15;
-    int Snum_ = 6 , Pmin_ = 10 , Lmin_ = 0.4;
+    float epsilon_ = 0.05 , delta_ = 0.15;
+    int Snum_ = 6 , Pmin_ = 8 , Lmin_ = 0.6;
     
 
 };
